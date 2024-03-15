@@ -1,12 +1,12 @@
 ---
-import Layout from '../layouts/Layout.astro';
+import Layout from '../../layouts/Layout.astro';
 ---
 
 <Layout title='Face Cam Scene Switcher'>
   <main>
-    <a href='/'>Back to All Stream Tools</a>
+    <a href='/stream-tools/'>Back to All Stream Tools</a>
     <h1>OBS Camera Face Detection</h1>
-    <a href='/config'>Config</a>
+    <a href='/stream-tools/face-cam-scene-switcher/config/'>Config</a>
     <p>
       Set up your camera's to track when your face looks at each one and switch
       to the respective scene in OBS
@@ -23,14 +23,14 @@ import Layout from '../layouts/Layout.astro';
     initializeCamera,
     pauseCamera,
     startCamera,
-  } from '../scripts/face-look-detection';
+  } from '../../scripts/face-look-detection';
   import {
     getAllCameraConfigs,
     getCameraConfigByCameraId,
     removeCameraConfig,
     addCameraConfigToStorage,
     updateCameraConfig,
-  } from '../scripts/camera-config';
+  } from '../../scripts/camera-config';
 
   const CAM_ID_ATTRIBUTE_NAME = 'cameraid';
   let cameras = [];

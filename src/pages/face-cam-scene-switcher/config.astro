@@ -1,11 +1,11 @@
 ---
-import Layout from '../layouts/Layout.astro';
+import Layout from '../../layouts/Layout.astro';
 ---
 
 <Layout title='Config - Face Cam Scene Switcher'>
-  <a href='/'>Back to All Stream Tools</a>
+  <a href='/stream-tools/'>Back to All Stream Tools</a>
   <h1>OBS Camera Face Detection - Configuration</h1>
-  <a href='/face-scene-switcher'>Back</a>
+  <a href='/stream-tools/face-cam-scene-switcher'>Back</a>
   <h2>OBS Websocket Configuration:</h2>
   <form id='obsConfigForm'>
     <label for='address'>OBS Websocket Address:</label>
@@ -30,12 +30,12 @@ import Layout from '../layouts/Layout.astro';
   <button id='updateSceneOptionsButton'>Update Scene Options</button>
 </Layout>
 <script>
-  import { connect, getAllScenes, getIsConnected } from '../scripts/obs';
+  import { connect, getAllScenes, getIsConnected } from '../../scripts/obs';
   import {
     getAllCameraConfigs,
     getCameraConfigByCameraId,
     updateCameraConfig,
-  } from '../scripts/camera-config';
+  } from '../../scripts/camera-config';
 
   let allScenes = [];
 
