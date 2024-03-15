@@ -1,0 +1,156 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title='Config - Face Cam Scene Switcher'>
+  <a href='/'>Back to All Stream Tools</a>
+  <h1>OBS Camera Face Detection - Configuration</h1>
+  <a href='/face-scene-switcher'>Back</a>
+  <h2>OBS Websocket Configuration:</h2>
+  <form id='obsConfigForm'>
+    <label for='address'>OBS Websocket Address:</label>
+    <input
+      type='text'
+      id='address'
+      name='address'
+      value='localhost'
+      required
+    /><br /><br />
+
+    <label for='port'>OBS Websocket Port:</label>
+    <input type='text' id='port' name='port' value='4455' required /><br /><br
+    />
+
+    <label for='password'>OBS Websocket Password:</label>
+    <input type='password' id='password' name='password' required /><br /><br />
+  </form>
+  <button id='saveObsConfigFormButton'>Save</button>
+  <h2>Camera Configurations:</h2>
+  <form id='cameraConfigsForm'></form>
+  <button id='updateSceneOptionsButton'>Update Scene Options</button>
+</Layout>
+<script>
+  import { connect, getAllScenes, getIsConnected } from '../scripts/obs';
+  import {
+    getAllCameraConfigs,
+    getCameraConfigByCameraId,
+    updateCameraConfig,
+  } from '../scripts/camera-config';
+
+  let allScenes = [];
+
+  // Function to handle form submission
+  function handleObsConfigSave(event) {
+    // Get form values
+    const form = document.getElementById('obsConfigForm');
+    const inputs = form?.querySelectorAll('input');
+    const values = {};
+
+    inputs?.forEach((input) => {
+      values[input.name] = input.value;
+    });
+
+    // Store form values in localStorage
+    localStorage.setItem('obsConfig', JSON.stringify(values));
+
+    // Display success message
+    console.log('OBS configuration values were stored in localStorage');
+  }
+
+  function handleCameraConfigSave(event) {
+    event.preventDefault();
+
+    // Get form values
+    const form = event.target;
+    const selects = form.querySelectorAll('select');
+    const values = {};
+
+    // @ts-ignore
+    selects.forEach((select) => {
+      // @ts-ignore
+      if (input.type.toLowerCase() !== 'submit') {
+        // @ts-ignore
+        values[input.name] = input.value;
+      }
+    });
+
+    // Store form values in localStorage
+    // localStorage.setItem('cameraConfigs', JSON.stringify(values));
+
+    console.log(values);
+    // Display success message
+    console.log('OBS configuration values were stored in localStorage');
+  }
+
+  async function handleUpdateScenes() {
+    if (!getIsConnected()) await connect();
+    allScenes = await getAllScenes();
+    console.log('Successfully retrieved latest scenes from OBS');
+  }
+
+  await handleUpdateScenes();
+
+  const updateSceneOptionsButton = document.getElementById(
+    'updateSceneOptionsButton',
+  );
+  updateSceneOptionsButton.addEventListener('click', handleUpdateScenes);
+
+  const obsConfigFormSaveButton = document.getElementById(
+    'saveObsConfigFormButton',
+  );
+  obsConfigFormSaveButton.addEventListener('click', handleObsConfigSave);
+
+  const cameraConfigsForm = document.getElementById('cameraConfigsForm');
+  cameraConfigsForm.addEventListener('submit', handleCameraConfigSave);
+
+  const obsConfigValue = localStorage.getItem('obsConfig');
+
+  if (obsConfigValue) {
+    const obsConfig = JSON.parse(obsConfigValue);
+    // @ts-ignore
+    document.getElementById('address').value = obsConfig.address;
+    // @ts-ignore
+    document.getElementById('port').value = obsConfig.port;
+    // @ts-ignore
+    document.getElementById('password').value = obsConfig.password;
+  }
+
+  const cameraConfigs = getAllCameraConfigs();
+  cameraConfigs.forEach((cameraConfig) => {
+    addCameraConfigDiv(cameraConfig);
+  });
+
+  function generateSceneOptions(scenes, selectedScene) {
+    let options = '';
+    scenes.forEach((scene) => {
+      options += `<option value="${scene}" ${scene === selectedScene ? 'selected' : ''}>${scene}</option>`;
+    });
+    return options;
+  }
+
+  function addCameraConfigDiv(cameraConfig) {
+    const cameraConfigDiv = document.createElement('div');
+    cameraConfigDiv.innerHTML = `
+      <input type="hidden" id="cameraId" name="cameraId" value="${cameraConfig.deviceId}">
+      <label>For Camera:</label>
+      <label name="name">${cameraConfig.name}</label>,
+      <label>Use Scene:</label>
+      <select id="selectFor-${cameraConfigs.deviceId}" name="sceneName">
+        ${generateSceneOptions(allScenes, cameraConfig.sceneName)}
+      </select>
+  `;
+    const sceneNameSelect = cameraConfigDiv.querySelector(
+      `#selectFor-${cameraConfigs.deviceId}`,
+    );
+    sceneNameSelect.addEventListener('change', handleSceneNameChange);
+    function handleSceneNameChange(event) {
+      const selectedScene = event.target.value;
+      let cameraToUpdate = getCameraConfigByCameraId(cameraConfig.deviceId);
+      cameraToUpdate.sceneName = selectedScene;
+      updateCameraConfig(cameraToUpdate);
+    }
+
+    cameraConfigDiv.addEventListener('submit', handleCameraConfigSave);
+    document.getElementById('cameraConfigsForm').appendChild(cameraConfigDiv);
+  }
+</script>

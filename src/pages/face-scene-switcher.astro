@@ -1,0 +1,449 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title='Face Cam Scene Switcher'>
+  <main>
+    <a href='/'>Back to All Stream Tools</a>
+    <h1>OBS Camera Face Detection</h1>
+    <a href='/config'>Config</a>
+    <p>
+      Set up your camera's to track when your face looks at each one and switch
+      to the respective scene in OBS
+    </p>
+    <select id='cameraSelect'></select><button id='addCameraButton'
+      >Add Camera</button
+    ><br /><br />
+  </main>
+</Layout>
+
+<script>
+  import {
+    startTracking,
+    initializeCamera,
+    pauseCamera,
+    startCamera,
+  } from '../scripts/face-look-detection';
+  import {
+    getAllCameraConfigs,
+    getCameraConfigByCameraId,
+    removeCameraConfig,
+    addCameraConfigToStorage,
+    updateCameraConfig,
+  } from '../scripts/camera-config';
+
+  const CAM_ID_ATTRIBUTE_NAME = 'cameraid';
+  let cameras = [];
+
+  const addCameraButton = document.getElementById('addCameraButton');
+  if (addCameraButton) {
+    addCameraButton.addEventListener('click', async () => {
+      const cameraSelect = document.getElementById('cameraSelect');
+      // @ts-ignore
+      const selectedCamera = cameraSelect?.value;
+      // @ts-ignore
+      const cameraName = cameraSelect?.options[cameraSelect.selectedIndex].text;
+      const existingCamera = getCameraConfigByCameraId(selectedCamera);
+      if (!existingCamera) {
+        const cameraConfig = {
+          deviceId: selectedCamera,
+          name: cameraName,
+          number: getAllCameraConfigs().length + 1,
+          liveThreshold: 0.45,
+          faceScoreThreshold: 0.45,
+          pitchThreshold: 0.5,
+          yawThreshold: 0.5,
+          sceneName: undefined,
+        };
+        addCameraConfigToStorage(cameraConfig);
+        addCameraDiv(cameraConfig);
+        initializeCamera(
+          selectedCamera,
+          document.getElementById(`video-camera-${selectedCamera}`),
+          document.getElementById(`canvas-camera-${selectedCamera}`),
+        );
+      } else {
+        alert('This camera has already been added');
+      }
+    });
+  }
+
+  async function initializeCameraConfigs() {
+    const cameraConfigs = getAllCameraConfigs();
+    if (!cameraConfigs || cameraConfigs.length === 0) {
+      localStorage.setItem('cameraConfigs', JSON.stringify([]));
+    } else {
+      // add camera divs for each camera config
+      cameraConfigs.forEach((config) => {
+        console.log('Setting up camera based on this config:', config);
+        addCameraDiv(config);
+        initializeCamera(
+          config.deviceId,
+          document.getElementById(`video-camera-${config.deviceId}`),
+          document.getElementById(`canvas-camera-${config.deviceId}`),
+        );
+      });
+    }
+  }
+
+  async function getSystemCameras() {
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const videoDevices = devices.filter(
+        (device) => device.kind === 'videoinput',
+      );
+      return videoDevices;
+    } catch (error) {
+      console.error('Error enumerating devices:', error);
+      return [];
+    }
+  }
+
+  async function populateCameraOptions() {
+    cameras = await getSystemCameras();
+    const cameraSelect = document.getElementById('cameraSelect');
+    if (cameraSelect) {
+      cameras.forEach((camera, index) => {
+        const option = document.createElement('option');
+        option.value = camera.deviceId;
+        // Use label if available, or give a generic name
+        option.text = camera.label || `Camera ${index + 1}`;
+        cameraSelect.appendChild(option);
+      });
+    }
+  }
+
+  function addCameraDiv(cameraOptions) {
+    if (!cameraOptions) {
+      console.error('No camera options provided to add in view');
+    }
+
+    console.log(
+      'Setting up html elements based on this config:',
+      cameraOptions,
+    );
+    const cameraDiv = document.createElement('div');
+    cameraDiv.id = `camera-container-${cameraOptions.deviceId}`;
+
+    const cameraLabel = createLabelElement(
+      cameraOptions.deviceId,
+      'cameraLabel',
+      `Camera: ${cameraOptions.name}`,
+    );
+    cameraDiv.appendChild(cameraLabel);
+    cameraDiv.appendChild(document.createElement('br'));
+
+    const isLookingLabel = createLabelElement(
+      cameraOptions.deviceId,
+      'isLookingLabel',
+      `Face Is Looking: N/A`,
+    );
+    cameraDiv.appendChild(isLookingLabel);
+
+    cameraDiv.appendChild(document.createElement('br'));
+
+    const playButton = createButtonElement(
+      cameraOptions.deviceId,
+      'togglePlayForCamera',
+      'Play Camera',
+      [
+        { name: 'isPlaying', value: 'false' },
+        { name: CAM_ID_ATTRIBUTE_NAME, value: cameraOptions.deviceId },
+      ],
+      togglePlayForCamera,
+    );
+    cameraDiv.appendChild(playButton);
+
+    const trackingButton = createButtonElement(
+      cameraOptions.deviceId,
+      'toggleTrackingForCamera',
+      'Start Tracking',
+      [
+        { name: 'isTracking', value: 'false' },
+        { name: CAM_ID_ATTRIBUTE_NAME, value: cameraOptions.deviceId },
+      ],
+      toggleTrackingForCamera,
+    );
+    cameraDiv.appendChild(trackingButton);
+
+    const removeButton = createButtonElement(
+      cameraOptions.deviceId,
+      'removeCamera',
+      'Remove Camera',
+      [
+        { name: 'cameraNumber', value: cameraOptions.number },
+        { name: CAM_ID_ATTRIBUTE_NAME, value: cameraOptions.deviceId },
+      ],
+      removeCameraListener,
+    );
+    cameraDiv.appendChild(removeButton);
+
+    cameraDiv.appendChild(document.createElement('br'));
+
+    const liveLevelLabel = createLabelElement(
+      cameraOptions.deviceId,
+      'live-level',
+      `Live: `,
+    );
+    cameraDiv.appendChild(liveLevelLabel);
+
+    const liveThresholdInput = createInputElement(
+      cameraOptions,
+      'live-level-input',
+      'text',
+      `Live`,
+      cameraOptions.liveThreshold,
+      'liveThreshold',
+    );
+    cameraDiv.appendChild(liveThresholdInput);
+
+    const faceScoreLabel = createLabelElement(
+      cameraOptions.deviceId,
+      'facescore-threshold',
+      `Face Score: `,
+    );
+    cameraDiv.appendChild(faceScoreLabel);
+
+    const faceScoreInput = createInputElement(
+      cameraOptions,
+      'facescore-threshold-input',
+      'text',
+      `Face Score`,
+      cameraOptions.faceScoreThreshold,
+      'faceScoreThreshold',
+    );
+    cameraDiv.appendChild(faceScoreInput);
+
+    const pitchLabel = createLabelElement(
+      cameraOptions.deviceId,
+      'pitch-threshold',
+      `Pitch: `,
+    );
+    cameraDiv.appendChild(pitchLabel);
+
+    const pitchThresholdInput = createInputElement(
+      cameraOptions,
+      'pitch-threshold-input',
+      'text',
+      `Pitch`,
+      cameraOptions.pitchThreshold,
+      'pitchThreshold',
+    );
+    cameraDiv.appendChild(pitchThresholdInput);
+
+    const yawLabel = createLabelElement(
+      cameraOptions.deviceId,
+      'yaw-threshold',
+      `Yaw: `,
+    );
+    cameraDiv.appendChild(yawLabel);
+
+    const yawThresholdInput = createInputElement(
+      cameraOptions,
+      'yaw-threshold-input',
+      'text',
+      `Yaw`,
+      cameraOptions.yawThreshold,
+      'yawThreshold',
+    );
+    cameraDiv.appendChild(yawThresholdInput);
+
+    cameraDiv.appendChild(document.createElement('br'));
+
+    const liveResultLabel = createLabelElement(
+      cameraOptions.deviceId,
+      'live-result',
+      `Live Result: `,
+    );
+    cameraDiv.appendChild(liveResultLabel);
+    cameraDiv.appendChild(document.createElement('br'));
+
+    const faceScoreResultLabel = createLabelElement(
+      cameraOptions.deviceId,
+      'facescore-result',
+      `Face Score Result: `,
+    );
+    cameraDiv.appendChild(faceScoreResultLabel);
+    cameraDiv.appendChild(document.createElement('br'));
+
+    const pitchResultLabel = createLabelElement(
+      cameraOptions.deviceId,
+      'pitch-result',
+      `Pitch Result: `,
+    );
+    cameraDiv.appendChild(pitchResultLabel);
+    cameraDiv.appendChild(document.createElement('br'));
+
+    const yawResultLabel = createLabelElement(
+      cameraOptions.deviceId,
+      'yaw-result',
+      `Yaw Result: `,
+    );
+    cameraDiv.appendChild(yawResultLabel);
+    cameraDiv.appendChild(document.createElement('br'));
+
+    cameraDiv.appendChild(document.createElement('br'));
+
+    const video = createVideoElement(cameraOptions.deviceId);
+    cameraDiv.appendChild(video);
+
+    const canvas = createCanvasElement(cameraOptions.deviceId);
+    cameraDiv.appendChild(canvas);
+
+    const div = document.body.appendChild(cameraDiv);
+
+    return div;
+  }
+
+  function removeCameraListener(event) {
+    const cameraId = event.target.getAttribute('cameraid');
+    console.log(`Removing camera ${cameraId}`);
+    const cameraDiv = document.getElementById(`camera-container-${cameraId}`);
+    cameraDiv?.remove();
+    removeCameraConfig(cameraId);
+  }
+
+  /**
+   * @param {string} cameraId
+   * @param {string} [idPrefix]
+   * @param {string} [innerText]
+   * @param {any[]} attributes
+   * @param {((this: HTMLButtonElement, ev: MouseEvent) => any) | undefined} [clickEventListener]
+   */
+  function createButtonElement(
+    cameraId,
+    idPrefix,
+    innerText,
+    attributes = [],
+    clickEventListener = () => console.log('No click event listener provided'),
+  ) {
+    const button = document.createElement('button');
+    button.id = `${idPrefix}-${cameraId}`;
+    button.innerText = `${innerText}`;
+    attributes.forEach((attribute) => {
+      button.setAttribute(attribute.name, attribute.value);
+    });
+    button.addEventListener('click', clickEventListener);
+    return button;
+  }
+
+  function createLabelElement(cameraId, idPrefix, innerText, attributes = []) {
+    const label = document.createElement('label');
+    label.id = `${idPrefix}-${cameraId}`;
+    label.innerText = `${innerText}`;
+    attributes.forEach((attribute) => {
+      label.setAttribute(attribute.name, attribute.value);
+    });
+    return label;
+  }
+
+  /**
+   * @param {{ deviceId: string; yawThreshold: string; }} cameraOptions
+   * @param {string} idPrefix
+   * @param {string} type
+   * @param {string} placeholder
+   * @param {string} value
+   * @param {string} relatedConfigName
+   */
+  function createInputElement(
+    cameraOptions,
+    idPrefix,
+    type,
+    placeholder,
+    value = '',
+    relatedConfigName = '',
+  ) {
+    const input = document.createElement('input');
+    input.id = `${idPrefix}-${cameraOptions.deviceId}`;
+    input.type = type;
+    input.placeholder = placeholder;
+    input.value = value;
+    input.setAttribute('cameraid', cameraOptions.deviceId);
+    input.addEventListener('change', (event) => {
+      // @ts-ignore
+      const cameraId = event.target.getAttribute('cameraid') || '';
+      const cameraConfig = getCameraConfigByCameraId(cameraId);
+      // @ts-ignore
+      cameraConfig[relatedConfigName] = parseFloat(event.target?.value);
+      updateCameraConfig(cameraConfig);
+      // const cameraConfigs = getAllCameraConfigs();
+      // const updatedCameraConfigs = cameraConfigs.map(config => {
+      //   if(config.deviceId === cameraId) {
+      //     config[relatedConfigName] = parseFloat(event.target?.value);
+      //   }
+      //   return config;
+      // });
+      // localStorage.setItem('cameraConfigs', JSON.stringify(updatedCameraConfigs));
+    });
+    return input;
+  }
+
+  function createVideoElement(cameraId) {
+    const video = document.createElement('video');
+    video.id = `video-camera-${cameraId}`;
+    video.width = 480;
+    video.height = 270;
+    video.setAttribute('autoplay', '');
+    video.setAttribute('muted', '');
+    video.setAttribute('playsinline', ''); // especially important for mobile browsers
+    video.setAttribute(CAM_ID_ATTRIBUTE_NAME, cameraId);
+    return video;
+  }
+
+  function createCanvasElement(cameraId) {
+    console.log(`Creating canvas for camera ${cameraId}`);
+    const canvas = document.createElement('canvas');
+    canvas.id = `canvas-camera-${cameraId}`;
+    canvas.setAttribute(CAM_ID_ATTRIBUTE_NAME, cameraId);
+    // Note: canvas is not displayed by default for now
+    canvas.setAttribute('style', 'margin: 0 auto; display:none;');
+    return canvas;
+  }
+
+  async function togglePlayForCamera(event) {
+    const isPlaying =
+      event.target.getAttribute('isPlaying')?.toLowerCase() === 'true';
+    const cameraId = event.target.getAttribute(CAM_ID_ATTRIBUTE_NAME);
+    const config = getCameraConfigByCameraId(cameraId);
+    console.log('config', config);
+    console.log(`Camera ID ${cameraId} isPlaying: ${isPlaying}`);
+    if (isPlaying) {
+      event.target.setAttribute('isPlaying', false);
+      event.target.innerText = `Play Camera`;
+      pauseCamera(cameraId);
+      // await stopCamera(cameraId);
+    } else {
+      event.target.setAttribute('isPlaying', true);
+      event.target.innerText = `Pause Camera`;
+      console.log(`Selected Camera is ${config.deviceId}`);
+      await startCamera(
+        cameraId,
+        document.getElementById(`video-camera-${cameraId}`),
+        document.getElementById(`canvas-camera-${cameraId}`),
+      );
+    }
+  }
+
+  async function toggleTrackingForCamera(event) {
+    console.dir(event);
+    const isTracking =
+      event.target.getAttribute('isTracking')?.toLowerCase() === 'true';
+    const cameraId = event.target.getAttribute(CAM_ID_ATTRIBUTE_NAME);
+    if (isTracking) {
+      event.target.setAttribute('isTracking', false);
+      event.target.innerText = `Start Tracking`;
+      const canvas = document.getElementById(`canvas-camera-${cameraId}`);
+      canvas?.remove();
+      pauseCamera(cameraId);
+    } else {
+      event.target.setAttribute('isTracking', true);
+      event.target.innerText = `Stop Tracking`;
+      const video = document.getElementById(`video-camera-${cameraId}`);
+      const canvas = document.getElementById(`canvas-camera-${cameraId}`);
+      startTracking(video, canvas, cameraId);
+    }
+  }
+
+  await populateCameraOptions();
+  await initializeCameraConfigs();
+</script>
