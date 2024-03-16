@@ -1,3 +1,12 @@
+export interface ICameraConfig {
+  deviceId: string;
+  name: string;
+  number: number;
+  faceScoreThreshold: number;
+  liveThreshold: number;
+  pitchThreshold: number;
+  yawThreshold: number;
+}
 
 export function getAllCameraConfigs() {
   const cameraConfigsValue = localStorage.getItem('cameraConfigs') || '[]';
@@ -7,10 +16,10 @@ export function getAllCameraConfigs() {
 
 export function getCameraConfigByCameraId(cameraId: string) {
   const cameraConfigs = getAllCameraConfigs();
-  return cameraConfigs.find(config => config.deviceId === cameraId);
+  return cameraConfigs.find((config: ICameraConfig) => config.deviceId === cameraId);
 }
 
-export function addCameraConfigToStorage(cameraConfig) {
+export function addCameraConfigToStorage(cameraConfig: ICameraConfig) {
   const cameraConfigs = getAllCameraConfigs();
   cameraConfigs.push(cameraConfig);
   localStorage.setItem('cameraConfigs', JSON.stringify(cameraConfigs));
@@ -18,13 +27,13 @@ export function addCameraConfigToStorage(cameraConfig) {
 
 export function removeCameraConfig(cameraId: string) {
   const cameraConfigs = getAllCameraConfigs();
-  const updatedCameraConfigs = cameraConfigs.filter(config => config.deviceId !== cameraId);
+  const updatedCameraConfigs = cameraConfigs.filter((config: ICameraConfig) => config.deviceId !== cameraId);
   localStorage.setItem('cameraConfigs', JSON.stringify(updatedCameraConfigs));
 }
 
-export function updateCameraConfig(cameraConfig) {
+export function updateCameraConfig(cameraConfig: ICameraConfig) {
   const cameraConfigs = getAllCameraConfigs();
-  const updatedCameraConfigs = cameraConfigs.map(config => {
+  const updatedCameraConfigs = cameraConfigs.map((config: ICameraConfig) => {
     if (config.deviceId === cameraConfig.deviceId) {
       return cameraConfig;
     }
