@@ -1,4 +1,4 @@
-import { getAllCameraConfigs } from './camera-config';
+import { getAllCameraConfigs, type ICameraConfig } from './camera-config';
 import OBSWebSocket from 'obs-websocket-js';
 
 const obs = new OBSWebSocket();
@@ -34,7 +34,7 @@ function updateObsConfig() {
 export async function setObsScene(cameraId: string) {
   console.log('Setting OBS scene for camera', cameraId);
   const cameraConfigs = getAllCameraConfigs();
-  const cameraConfig = cameraConfigs.find(x => x.deviceId === cameraId);
+  const cameraConfig = cameraConfigs.find((c: ICameraConfig) => c.deviceId === cameraId);
   if (cameraConfig && cameraConfig.sceneName) {
     changeScene(cameraConfig.sceneName);
   } else {
@@ -48,7 +48,7 @@ export function changeScene(sceneName: string) {
 
 export async function getAllScenes() {
   try {
-    let scenes = [];
+    let scenes: any[] = [];
     const sceneList = await obs.call('GetSceneList');
     if (sceneList && sceneList.scenes) {
       scenes = sceneList.scenes.map((scene) => scene.sceneName);
