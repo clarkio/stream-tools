@@ -3,9 +3,9 @@ import Layout from '../../layouts/Layout.astro';
 ---
 
 <Layout title='Config - Face Cam Scene Switcher'>
-  <a href='../../stream-tools/'>Back to All Stream Tools</a>
+  <a href='../../'>Back to All Stream Tools</a>
   <h1>OBS Camera Face Detection - Configuration</h1>
-  <a href='../face-cam-scene-switcher/'>Back</a>
+  <a href='../'>Back</a>
   <h2>OBS Websocket Configuration:</h2>
   <form id='obsConfigForm'>
     <label for='address'>OBS Websocket Address:</label>
@@ -37,7 +37,7 @@ import Layout from '../../layouts/Layout.astro';
     updateCameraConfig,
   } from '../../scripts/camera-config';
 
-  let allScenes = [];
+  let allScenes: string[] = [];
 
   // Function to handle form submission
   function handleObsConfigSave(event) {
