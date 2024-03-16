@@ -26,7 +26,7 @@ type Camera = {
   faceLookingCount: number,
   isFaceLooking: boolean,
   timestamp: any,
-  fps: number,
+  fps: any,
   attentionLevel: number;
 };
 let cameras: Camera[] = [];
@@ -49,7 +49,7 @@ async function initializeCameraSettings(cameraId: string) {
 }
 
 async function detectionLoop(videoElement: HTMLVideoElement) { // main detection loop
-  const cameraId = videoElement.getAttribute(CAM_ID_ATTRIBUTE_NAME);
+  const cameraId = videoElement.getAttribute(CAM_ID_ATTRIBUTE_NAME) || 'No Video Element for Camera ID';
   const camera = cameras.find(camera => camera.cameraId === cameraId);
   if (!camera) throw new Error(`No camera found for ${cameraId}`);
   if (!videoElement?.paused) {
@@ -101,7 +101,7 @@ async function detectionLoop(videoElement: HTMLVideoElement) { // main detection
   requestAnimationFrame(() => detectionLoop(videoElement)); // start new frame immediately
 }
 
-async function determineIfFaceIsLooking(result, cameraId) {
+async function determineIfFaceIsLooking(result: any, cameraId: string) {
   let isLooking = false;
   if (!result?.face || result?.face.length === 0) return isLooking;
 
@@ -121,11 +121,11 @@ async function determineIfFaceIsLooking(result, cameraId) {
   return isLooking;
 }
 
-async function isInThresholdRange(value, threshold) {
+async function isInThresholdRange(value: number, threshold: number) {
   return Math.abs(value) <= threshold;
 }
 
-async function getCameraThresholds(cameraId) {
+async function getCameraThresholds(cameraId: string) {
   // TODO: get these values from configuration/local storage instead of the DOM
   // @ts-ignore
   const pitchThreshold = document.getElementById(`pitch-threshold-input-${cameraId}`)?.value;
@@ -138,23 +138,24 @@ async function getCameraThresholds(cameraId) {
   return { pitchThreshold, yawThreshold, liveThreshold, faceScoreThreshold };
 }
 
-async function printDetectionResults(result, cameraId) {
+async function printDetectionResults(result: any, cameraId: string) {
   if (!result?.face || result?.face.length === 0) return;
   const face = result.face[0];
   // @ts-ignore
   const { pitch, roll, yaw } = face.rotation.angle;
   // @ts-ignore
   const { bearing, strength } = face.rotation.gaze;
-  document.getElementById(`pitch-result-${cameraId}`).innerText = `Pitch Result: ${pitch}`;
-  document.getElementById(`yaw-result-${cameraId}`).innerText = ` Yaw Result: ${yaw}`;
-  document.getElementById(`live-result-${cameraId}`).innerText = `Live Result: ${face.live}`;
-  document.getElementById(`facescore-result-${cameraId}`).innerText = `Face Score Result: ${face.faceScore}`;
+  document.getElementById(`pitch-result-${cameraId}`)!.innerText = `Pitch Result: ${pitch}`;
+  document.getElementById(`yaw-result-${cameraId}`)!.innerText = ` Yaw Result: ${yaw}`;
+  document.getElementById(`live-result-${cameraId}`)!.innerText = `Live Result: ${face.live}`;
+  document.getElementById(`facescore-result-${cameraId}`)!.innerText = `Face Score Result: ${face.faceScore}`;
 }
 
 // @ts-ignore
 async function drawLoop(videoElement, canvasElement) { // main screen refresh loop
   const cameraId = videoElement.getAttribute(CAM_ID_ATTRIBUTE_NAME);
   const camera = cameras.find(camera => camera.cameraId === cameraId);
+  if (!camera) throw new Error(`No camera found for ${cameraId}`);
   if (!videoElement.paused) {
     const interpolated = camera.human.next(camera.human.result); // smoothen result using last-known results
     const processed = await camera.human.image(videoElement); // get current video frame, but enhanced with camera.human.filters
@@ -186,7 +187,7 @@ export async function initializeCamera(deviceId, videoElement, canvasElement) {
   }
 }
 
-export async function startCamera(cameraId, videoElement, canvasElement) {
+export async function startCamera(cameraId: string, videoElement: HTMLVideoElement, canvasElement: HTMLCanvasElement) {
   console.log('Attempting to start camera with ID: ', cameraId);
   const camera = cameras.find(camera => camera.cameraId === cameraId);
   if (!camera) throw new Error(`No camera found with ID ${cameraId}`);
@@ -225,7 +226,7 @@ export function pauseCamera(cameraId: string) {
 /**
  * @param {string} cameraId
  */
-export async function stopCamera(cameraId) {
+export async function stopCamera(cameraId: string) {
   const camera = cameras.find(camera => camera.cameraId === cameraId);
   if (!camera) throw new Error(`No camera found with ID ${cameraId}`);
   await camera.human.webcam.stop();
