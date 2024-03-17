@@ -30,6 +30,7 @@ import Layout from '../../layouts/Layout.astro';
     removeCameraConfig,
     addCameraConfigToStorage,
     updateCameraConfig,
+    type ICameraConfig,
   } from '../../scripts/camera-config';
 
   const CAM_ID_ATTRIBUTE_NAME = 'cameraid';
@@ -74,7 +75,7 @@ import Layout from '../../layouts/Layout.astro';
       localStorage.setItem('cameraConfigs', JSON.stringify([]));
     } else {
       // add camera divs for each camera config
-      cameraConfigs.forEach((config) => {
+      cameraConfigs.forEach((config: ICameraConfig) => {
         console.log('Setting up camera based on this config:', config);
         addCameraDiv(config);
         initializeCamera(
@@ -113,7 +114,7 @@ import Layout from '../../layouts/Layout.astro';
     }
   }
 
-  function addCameraDiv(cameraOptions) {
+  function addCameraDiv(cameraOptions: ICameraConfig) {
     if (!cameraOptions) {
       console.error('No camera options provided to add in view');
     }
@@ -192,7 +193,7 @@ import Layout from '../../layouts/Layout.astro';
       'live-level-input',
       'text',
       `Live`,
-      cameraOptions.liveThreshold,
+      cameraOptions.liveThreshold.toString(),
       'liveThreshold',
     );
     cameraDiv.appendChild(liveThresholdInput);
@@ -209,7 +210,7 @@ import Layout from '../../layouts/Layout.astro';
       'facescore-threshold-input',
       'text',
       `Face Score`,
-      cameraOptions.faceScoreThreshold,
+      cameraOptions.faceScoreThreshold.toString(),
       'faceScoreThreshold',
     );
     cameraDiv.appendChild(faceScoreInput);
@@ -226,7 +227,7 @@ import Layout from '../../layouts/Layout.astro';
       'pitch-threshold-input',
       'text',
       `Pitch`,
-      cameraOptions.pitchThreshold,
+      cameraOptions.pitchThreshold.toString(),
       'pitchThreshold',
     );
     cameraDiv.appendChild(pitchThresholdInput);
@@ -243,7 +244,7 @@ import Layout from '../../layouts/Layout.astro';
       'yaw-threshold-input',
       'text',
       `Yaw`,
-      cameraOptions.yawThreshold,
+      cameraOptions.yawThreshold.toString(),
       'yawThreshold',
     );
     cameraDiv.appendChild(yawThresholdInput);
@@ -295,8 +296,8 @@ import Layout from '../../layouts/Layout.astro';
     return div;
   }
 
-  function removeCameraListener(event) {
-    const cameraId = event.target.getAttribute('cameraid');
+  function removeCameraListener(event: any) {
+    const cameraId = event.target!.getAttribute('cameraid');
     console.log(`Removing camera ${cameraId}`);
     const cameraDiv = document.getElementById(`camera-container-${cameraId}`);
     cameraDiv?.remove();
@@ -311,11 +312,12 @@ import Layout from '../../layouts/Layout.astro';
    * @param {((this: HTMLButtonElement, ev: MouseEvent) => any) | undefined} [clickEventListener]
    */
   function createButtonElement(
-    cameraId,
-    idPrefix,
-    innerText,
-    attributes = [],
-    clickEventListener = () => console.log('No click event listener provided'),
+    cameraId: string,
+    idPrefix: string,
+    innerText: string,
+    attributes: any[] = [],
+    clickEventListener: EventListener = () =>
+      console.log('No click event listener provided'),
   ) {
     const button = document.createElement('button');
     button.id = `${idPrefix}-${cameraId}`;
@@ -327,7 +329,12 @@ import Layout from '../../layouts/Layout.astro';
     return button;
   }
 
-  function createLabelElement(cameraId, idPrefix, innerText, attributes = []) {
+  function createLabelElement(
+    cameraId: string,
+    idPrefix: string,
+    innerText: string,
+    attributes: any[] = [],
+  ) {
     const label = document.createElement('label');
     label.id = `${idPrefix}-${cameraId}`;
     label.innerText = `${innerText}`;
@@ -346,12 +353,12 @@ import Layout from '../../layouts/Layout.astro';
    * @param {string} relatedConfigName
    */
   function createInputElement(
-    cameraOptions,
-    idPrefix,
-    type,
-    placeholder,
-    value = '',
-    relatedConfigName = '',
+    cameraOptions: ICameraConfig,
+    idPrefix: string,
+    type: string,
+    placeholder: string,
+    value: string = '',
+    relatedConfigName: string = '',
   ) {
     const input = document.createElement('input');
     input.id = `${idPrefix}-${cameraOptions.deviceId}`;
@@ -378,7 +385,7 @@ import Layout from '../../layouts/Layout.astro';
     return input;
   }
 
-  function createVideoElement(cameraId) {
+  function createVideoElement(cameraId: string) {
     const video = document.createElement('video');
     video.id = `video-camera-${cameraId}`;
     video.width = 480;
@@ -390,7 +397,7 @@ import Layout from '../../layouts/Layout.astro';
     return video;
   }
 
-  function createCanvasElement(cameraId) {
+  function createCanvasElement(cameraId: string) {
     console.log(`Creating canvas for camera ${cameraId}`);
     const canvas = document.createElement('canvas');
     canvas.id = `canvas-camera-${cameraId}`;
@@ -400,7 +407,7 @@ import Layout from '../../layouts/Layout.astro';
     return canvas;
   }
 
-  async function togglePlayForCamera(event) {
+  async function togglePlayForCamera(event: any) {
     const isPlaying =
       event.target.getAttribute('isPlaying')?.toLowerCase() === 'true';
     const cameraId = event.target.getAttribute(CAM_ID_ATTRIBUTE_NAME);
@@ -418,13 +425,15 @@ import Layout from '../../layouts/Layout.astro';
       console.log(`Selected Camera is ${config.deviceId}`);
       await startCamera(
         cameraId,
-        document.getElementById(`video-camera-${cameraId}`),
-        document.getElementById(`canvas-camera-${cameraId}`),
+        document.getElementById(`video-camera-${cameraId}`) as HTMLVideoElement,
+        document.getElementById(
+          `canvas-camera-${cameraId}`,
+        ) as HTMLCanvasElement,
       );
     }
   }
 
-  async function toggleTrackingForCamera(event) {
+  async function toggleTrackingForCamera(event: any) {
     console.dir(event);
     const isTracking =
       event.target.getAttribute('isTracking')?.toLowerCase() === 'true';
