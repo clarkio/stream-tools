@@ -114,7 +114,7 @@ import Layout from '../../layouts/Layout.astro';
       <label name="name">${cameraConfig.name}</label> -->
       <label>Use Scene:</label>
       <select id="selectFor-${cameraConfigs.deviceId}" name="sceneName">
-        ${generateSceneOptions(allScenes, cameraConfig.sceneName)}
+        ${generateSceneOptions(allScenes, cameraConfig.sceneName || '')}
       </select>
   `;
     const sceneNameSelect = cameraConfigDiv.querySelector(

@@ -6,7 +6,7 @@ export interface ICameraConfig {
   liveThreshold: number;
   pitchThreshold: number;
   yawThreshold: number;
-  sceneName: string;
+  sceneName: string | null;
 }
 
 export function getAllCameraConfigs() {
