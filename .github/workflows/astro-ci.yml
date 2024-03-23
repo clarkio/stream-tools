@@ -6,7 +6,7 @@ on:
     branches: [ main ]
   # Allows you to run this workflow manually from the Actions tab on GitHub.
   workflow_dispatch:
-  
+
 # Allow this job to clone the repo and create a page deployment
 permissions:
   contents: read
@@ -15,15 +15,15 @@ permissions:
 
 env:
     GH_ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout your repository using git
-        uses: actions/checkout@v2          
+        uses: actions/checkout@v4
       - name: Install, build, and upload your site
-        uses: withastro/action@v0
+        uses: withastro/action@v2
         # with:
             # path: . # The root location of your Astro project inside the repository. (optional)
             # node-version: 16 # The specific version of Node that should be used to build your site. Defaults to 16. (optional)
@@ -39,4 +39,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v1
+        uses: actions/deploy-pages@v4
