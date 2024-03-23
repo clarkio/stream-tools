@@ -89,7 +89,7 @@ import Layout from '../../layouts/Layout.astro';
 
   async function getSystemCameras() {
     try {
-      navigator.mediaDevices.getUserMedia({ video: true });
+      await navigator.mediaDevices.getUserMedia({ video: true });
       const devices = await navigator.mediaDevices.enumerateDevices();
       const videoDevices = devices.filter(
         (device) => device.kind === 'videoinput',
