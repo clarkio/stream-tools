@@ -21,6 +21,7 @@ export async function connect() {
   } catch (error) {
     console.error('Failed to connect to OBS WebSocket server:', error);
     isConnected = false;
+    alert('Failed to connect to the OBS WebSocket server. Please check the OBS WebSocket settings.');
     throw error;
   }
 }

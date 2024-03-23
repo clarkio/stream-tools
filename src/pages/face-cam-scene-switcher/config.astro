@@ -26,8 +26,9 @@ import Layout from '../../layouts/Layout.astro';
   </form>
   <button id='saveObsConfigFormButton'>Save</button>
   <h2>Camera Configurations:</h2>
-  <form id='cameraConfigsForm'></form>
   <button id='updateSceneOptionsButton'>Update Scene Options</button>
+  <br /><br />
+  <div id='cameraConfigs'></div>
 </Layout>
 <script>
   import { connect, getAllScenes, getIsConnected } from '../../scripts/obs';
@@ -35,16 +36,17 @@ import Layout from '../../layouts/Layout.astro';
     getAllCameraConfigs,
     getCameraConfigByCameraId,
     updateCameraConfig,
+    type ICameraConfig,
   } from '../../scripts/camera-config';
 
   let allScenes: string[] = [];
 
   // Function to handle form submission
-  function handleObsConfigSave(event) {
+  function handleObsConfigSave(_event: Event) {
     // Get form values
     const form = document.getElementById('obsConfigForm');
     const inputs = form?.querySelectorAll('input');
-    const values = {};
+    let values: { [key: string]: string } = {};
 
     inputs?.forEach((input) => {
       values[input.name] = input.value;
@@ -57,51 +59,27 @@ import Layout from '../../layouts/Layout.astro';
     console.log('OBS configuration values were stored in localStorage');
   }
 
-  function handleCameraConfigSave(event) {
-    event.preventDefault();
-
-    // Get form values
-    const form = event.target;
-    const selects = form.querySelectorAll('select');
-    const values = {};
-
-    // @ts-ignore
-    selects.forEach((select) => {
-      // @ts-ignore
-      if (input.type.toLowerCase() !== 'submit') {
-        // @ts-ignore
-        values[input.name] = input.value;
-      }
-    });
-
-    // Store form values in localStorage
-    // localStorage.setItem('cameraConfigs', JSON.stringify(values));
-
-    console.log(values);
-    // Display success message
-    console.log('OBS configuration values were stored in localStorage');
-  }
-
   async function handleUpdateScenes() {
-    if (!getIsConnected()) await connect();
-    allScenes = await getAllScenes();
-    console.log('Successfully retrieved latest scenes from OBS');
+    try {
+      if (!getIsConnected()) await connect();
+      allScenes = await getAllScenes();
+      console.log('Successfully retrieved latest scenes from OBS');
+    } catch (error) {
+      console.error('Error retrieving scenes from OBS:', error);
+    }
   }
 
   await handleUpdateScenes();
 
   const updateSceneOptionsButton = document.getElementById(
     'updateSceneOptionsButton',
-  );
+  ) as HTMLButtonElement;
   updateSceneOptionsButton.addEventListener('click', handleUpdateScenes);
 
   const obsConfigFormSaveButton = document.getElementById(
     'saveObsConfigFormButton',
-  );
+  ) as HTMLButtonElement;
   obsConfigFormSaveButton.addEventListener('click', handleObsConfigSave);
-
-  const cameraConfigsForm = document.getElementById('cameraConfigsForm');
-  cameraConfigsForm.addEventListener('submit', handleCameraConfigSave);
 
   const obsConfigValue = localStorage.getItem('obsConfig');
 
@@ -116,24 +94,24 @@ import Layout from '../../layouts/Layout.astro';
   }
 
   const cameraConfigs = getAllCameraConfigs();
-  cameraConfigs.forEach((cameraConfig) => {
+  cameraConfigs.forEach((cameraConfig: ICameraConfig) => {
     addCameraConfigDiv(cameraConfig);
   });
 
-  function generateSceneOptions(scenes, selectedScene) {
+  function generateSceneOptions(scenes: string[], selectedScene: string) {
     let options = '';
-    scenes.forEach((scene) => {
+    scenes.forEach((scene: string) => {
       options += `<option value="${scene}" ${scene === selectedScene ? 'selected' : ''}>${scene}</option>`;
     });
     return options;
   }
 
-  function addCameraConfigDiv(cameraConfig) {
+  function addCameraConfigDiv(cameraConfig: ICameraConfig) {
     const cameraConfigDiv = document.createElement('div');
     cameraConfigDiv.innerHTML = `
       <input type="hidden" id="cameraId" name="cameraId" value="${cameraConfig.deviceId}">
       <label>For Camera:</label>
-      <label name="name">${cameraConfig.name}</label>,
+      <label name="name">${cameraConfig.name}</label> -->
       <label>Use Scene:</label>
       <select id="selectFor-${cameraConfigs.deviceId}" name="sceneName">
         ${generateSceneOptions(allScenes, cameraConfig.sceneName)}
@@ -141,16 +119,19 @@ import Layout from '../../layouts/Layout.astro';
   `;
     const sceneNameSelect = cameraConfigDiv.querySelector(
       `#selectFor-${cameraConfigs.deviceId}`,
-    );
+    ) as HTMLSelectElement;
     sceneNameSelect.addEventListener('change', handleSceneNameChange);
-    function handleSceneNameChange(event) {
-      const selectedScene = event.target.value;
+    function handleSceneNameChange(event: Event) {
+      const sceneSelector = event.target as HTMLSelectElement;
+      const selectedScene = sceneSelector.value;
       let cameraToUpdate = getCameraConfigByCameraId(cameraConfig.deviceId);
       cameraToUpdate.sceneName = selectedScene;
       updateCameraConfig(cameraToUpdate);
     }
 
-    cameraConfigDiv.addEventListener('submit', handleCameraConfigSave);
-    document.getElementById('cameraConfigsForm').appendChild(cameraConfigDiv);
+    const cameraConfigsDiv = document.getElementById(
+      'cameraConfigs',
+    ) as HTMLDivElement;
+    cameraConfigsDiv?.appendChild(cameraConfigDiv);
   }
 </script>
