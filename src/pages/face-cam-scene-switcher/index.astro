@@ -87,9 +87,24 @@ import Layout from '../../layouts/Layout.astro';
     }
   }
 
+  async function checkCameraPermission() {
+    try {
+      const permissionStatus = await navigator.permissions.query({
+        // @ts-ignore
+        name: 'camera',
+      });
+      return permissionStatus.state === 'granted';
+    } catch (error) {
+      console.error('Error checking camera permission:', error);
+      return false;
+    }
+  }
+
   async function getSystemCameras() {
     try {
-      await navigator.mediaDevices.getUserMedia({ video: true });
+      const cameraPermission = await checkCameraPermission();
+      if (!cameraPermission)
+        await navigator.mediaDevices.getUserMedia({ video: true });
       const devices = await navigator.mediaDevices.enumerateDevices();
       const videoDevices = devices.filter(
         (device) => device.kind === 'videoinput',
