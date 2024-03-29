@@ -2,6 +2,7 @@
 import Human from 'https://cdn.jsdelivr.net/npm/@vladmandic/human/dist/human.esm.js';
 
 import { connect, getIsConnected, setObsScene } from './obs';
+import { getCameraConfigByCameraId } from './camera-config';
 const CAM_ID_ATTRIBUTE_NAME = 'cameraid';
 
 const myConfig = {
@@ -23,7 +24,8 @@ const myConfig = {
 type Camera = {
   cameraId: string,
   human: any,
-  faceLookingCount: number,
+  faceDetectionFrameCount: number,
+  faceDetectionFramesThreshold: number,
   isFaceLooking: boolean,
   timestamp: any,
   fps: any,
@@ -32,9 +34,12 @@ type Camera = {
 let cameras: Camera[] = [];
 
 async function initializeCameraSettings(cameraId: string) {
-  let faceLookingCount = 0;
   let isFaceLooking = false;
   let attentionLevel = 0;
+  let faceDetectionFrameCount = 0;
+  const cameraConfig = getCameraConfigByCameraId(cameraId);
+  let faceDetectionFramesThreshold = cameraConfig?.faceDetectionFramesThreshold || 0;
+
   const human = new Human(myConfig);
   human.draw.options.font = 'small-caps 18px "Lato"'; // set font used to draw labels when using draw methods
   human.draw.options.lineHeight = 20;
@@ -45,7 +50,7 @@ async function initializeCameraSettings(cameraId: string) {
 
   const timestamp = { detect: 0, draw: 0, tensors: 0, start: 0 }; // holds information used to calculate performance and possible memory leaks
   const fps = { detectFPS: 0, drawFPS: 0, frames: 0, averageMs: 0 }; // holds calculated fps information for both detect and screen refresh
-  return { cameraId, human, faceLookingCount, isFaceLooking, timestamp, fps, attentionLevel };
+  return { cameraId, human, faceDetectionFrameCount, isFaceLooking, timestamp, fps, attentionLevel, faceDetectionFramesThreshold };
 }
 
 async function detectionLoop(videoElement: HTMLVideoElement) { // main detection loop
@@ -56,11 +61,11 @@ async function detectionLoop(videoElement: HTMLVideoElement) { // main detection
     if (camera.timestamp.start === 0) camera.timestamp.start = camera.human.now();
 
     const result = await camera.human.detect(videoElement);
-    await printDetectionResults(result, cameraId);
+    await printDetectionResults(result, camera);
     const isFaceLooking = await determineIfFaceIsLooking(result, cameraId);
     if (isFaceLooking) {
-      camera.faceLookingCount++;
-      if (camera.faceLookingCount >= 2) {
+      camera.faceDetectionFrameCount++;
+      if (camera.faceDetectionFrameCount >= camera.faceDetectionFramesThreshold) {
         if (!camera.isFaceLooking) {
           camera.isFaceLooking = true;
           console.log(`Camera ID ${cameraId} IS being looked at!`);
@@ -75,8 +80,8 @@ async function detectionLoop(videoElement: HTMLVideoElement) { // main detection
         }
       }
     } else {
-      if (camera.faceLookingCount !== 0) {
-        camera.faceLookingCount = 0;
+      if (camera.faceDetectionFrameCount !== 0) {
+        camera.faceDetectionFrameCount = 0;
         camera.isFaceLooking = false;
         console.log(`Camera ID ${cameraId} IS NOT being looked at!`);
         const message = `Face Is Looking: ${camera.isFaceLooking}`;
@@ -138,17 +143,18 @@ async function getCameraThresholds(cameraId: string) {
   return { pitchThreshold, yawThreshold, liveThreshold, faceScoreThreshold };
 }
 
-async function printDetectionResults(result: any, cameraId: string) {
+async function printDetectionResults(result: any, camera: Camera) {
   if (!result?.face || result?.face.length === 0) return;
   const face = result.face[0];
   // @ts-ignore
   const { pitch, roll, yaw } = face.rotation.angle;
   // @ts-ignore
   const { bearing, strength } = face.rotation.gaze;
-  document.getElementById(`pitch-result-${cameraId}`)!.innerText = `Pitch Result: ${pitch}`;
-  document.getElementById(`yaw-result-${cameraId}`)!.innerText = ` Yaw Result: ${yaw}`;
-  document.getElementById(`live-result-${cameraId}`)!.innerText = `Live Result: ${face.live}`;
-  document.getElementById(`facescore-result-${cameraId}`)!.innerText = `Face Score Result: ${face.faceScore}`;
+  document.getElementById(`pitch-result-${camera.cameraId}`)!.innerText = `Pitch Result: ${pitch}`;
+  document.getElementById(`yaw-result-${camera.cameraId}`)!.innerText = ` Yaw Result: ${yaw}`;
+  document.getElementById(`live-result-${camera.cameraId}`)!.innerText = `Live Result: ${face.live}`;
+  document.getElementById(`facescore-result-${camera.cameraId}`)!.innerText = `Face Score Result: ${face.faceScore}`;
+  document.getElementById(`face-detection-frame-count-${camera.cameraId}`)!.innerText = `Face Detection Frame Count: ${camera.faceDetectionFrameCount}`;
 }
 
 // @ts-ignore

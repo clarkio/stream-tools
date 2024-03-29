@@ -46,7 +46,7 @@ import Layout from '../../layouts/Layout.astro';
       const cameraName = cameraSelect?.options[cameraSelect.selectedIndex].text;
       const existingCamera = getCameraConfigByCameraId(selectedCamera);
       if (!existingCamera) {
-        const cameraConfig = {
+        const cameraConfig: ICameraConfig = {
           deviceId: selectedCamera,
           name: cameraName,
           number: getAllCameraConfigs().length + 1,
@@ -55,6 +55,7 @@ import Layout from '../../layouts/Layout.astro';
           pitchThreshold: 0.5,
           yawThreshold: 0.5,
           sceneName: null,
+          faceDetectionFramesThreshold: 0,
         };
         addCameraConfigToStorage(cameraConfig);
         addCameraDiv(cameraConfig);
@@ -265,6 +266,23 @@ import Layout from '../../layouts/Layout.astro';
     );
     cameraDiv.appendChild(yawThresholdInput);
 
+    const faceFramesDelayLabel = createLabelElement(
+      cameraOptions.deviceId,
+      'face-frames-delay-threshold',
+      `Frames Delay: `,
+    );
+    cameraDiv.appendChild(faceFramesDelayLabel);
+
+    const faceFramesDelayThresholdInput = createInputElement(
+      cameraOptions,
+      'face-frames-delay-threshold-input',
+      'text',
+      `Frames Delay`,
+      cameraOptions.faceDetectionFramesThreshold.toString(),
+      'faceFramesDelayThreshold',
+    );
+    cameraDiv.appendChild(faceFramesDelayThresholdInput);
+
     cameraDiv.appendChild(document.createElement('br'));
 
     const liveResultLabel = createLabelElement(
@@ -297,6 +315,14 @@ import Layout from '../../layouts/Layout.astro';
       `Yaw Result: `,
     );
     cameraDiv.appendChild(yawResultLabel);
+    cameraDiv.appendChild(document.createElement('br'));
+
+    const faceDetectionFrameCountLabel = createLabelElement(
+      cameraOptions.deviceId,
+      'face-detection-frame-count',
+      `Face Detection Frame Count: `,
+    );
+    cameraDiv.appendChild(faceDetectionFrameCountLabel);
     cameraDiv.appendChild(document.createElement('br'));
 
     cameraDiv.appendChild(document.createElement('br'));

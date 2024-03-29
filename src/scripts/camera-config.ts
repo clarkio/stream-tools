@@ -7,6 +7,7 @@ export interface ICameraConfig {
   pitchThreshold: number;
   yawThreshold: number;
   sceneName: string | null;
+  faceDetectionFramesThreshold: number;
 }
 
 export function getAllCameraConfigs() {
