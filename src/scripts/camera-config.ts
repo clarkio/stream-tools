@@ -16,7 +16,7 @@ export function getAllCameraConfigs() {
   return cameraConfigs;
 }
 
-export function getCameraConfigByCameraId(cameraId: string) {
+export function getCameraConfigByCameraId(cameraId: string): ICameraConfig | undefined {
   const cameraConfigs = getAllCameraConfigs();
   return cameraConfigs.find((config: ICameraConfig) => config.deviceId === cameraId);
 }

@@ -2,7 +2,7 @@
 import Human from 'https://cdn.jsdelivr.net/npm/@vladmandic/human/dist/human.esm.js';
 
 import { connect, getIsConnected, setObsScene } from './obs';
-import { getCameraConfigByCameraId } from './camera-config';
+import { getCameraConfigByCameraId, type ICameraConfig } from './camera-config';
 const CAM_ID_ATTRIBUTE_NAME = 'cameraid';
 
 const myConfig = {
@@ -131,15 +131,8 @@ async function isInThresholdRange(value: number, threshold: number) {
 }
 
 async function getCameraThresholds(cameraId: string) {
-  // TODO: get these values from configuration/local storage instead of the DOM
-  // @ts-ignore
-  const pitchThreshold = document.getElementById(`pitch-threshold-input-${cameraId}`)?.value;
-  // @ts-ignore
-  const yawThreshold = document.getElementById(`yaw-threshold-input-${cameraId}`)?.value;
-  // @ts-ignore
-  const liveThreshold = document.getElementById(`live-level-input-${cameraId}`)?.value;
-  // @ts-ignore
-  const faceScoreThreshold = document.getElementById(`facescore-threshold-input-${cameraId}`)?.value;
+  const { pitchThreshold, faceScoreThreshold, liveThreshold, yawThreshold } = getCameraConfigByCameraId(cameraId) || { pitchThreshold: 0, faceScoreThreshold: 0, liveThreshold: 0, yawThreshold: 0 };
+
   return { pitchThreshold, yawThreshold, liveThreshold, faceScoreThreshold };
 }
 
