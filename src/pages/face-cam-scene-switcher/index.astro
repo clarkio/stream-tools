@@ -3,17 +3,29 @@ import Layout from '../../layouts/Layout.astro';
 ---
 
 <Layout title='Face Cam Scene Switcher'>
-  <main>
-    <a href='../'>Back to All Stream Tools</a>
-    <h1>OBS Camera Face Detection</h1>
-    <a href='config'>Config</a>
+  <main class='text-white'>
+    <a class='text-white underline visited:text-purple-600' href='../'
+      >Back to All Stream Tools</a
+    >
+    <h1 class='text-2xl font-bold'>OBS Camera Face Detection</h1>
+    <a class='text-white underline visited:text-purple-600' href='config'
+      >Config</a
+    >
     <p>
       Set up your camera's to track when your face looks at each one and switch
       to the respective scene in OBS
     </p>
-    <select id='cameraSelect'></select><button id='addCameraButton'
+    <select id='cameraSelect' class='rounded px-4 py-2 font-bold text-black'
+    ></select><button
+      id='addCameraButton'
+      class='rounded bg-blue-500 px-4 py-2 font-bold text-white hover:bg-blue-700'
       >Add Camera</button
     ><br /><br />
+    <div
+      id='camerasContainer'
+      class='relative flex flex-row flex-wrap overflow-hidden gap-1 py-6 px-6'
+    >
+    </div>
   </main>
 </Layout>
 
@@ -32,6 +44,7 @@ import Layout from '../../layouts/Layout.astro';
     updateCameraConfig,
     type ICameraConfig,
   } from '../../scripts/camera-config';
+  import CameraCard from '../../components/CameraCard.svelte';
 
   const CAM_ID_ATTRIBUTE_NAME = 'cameraid';
   let cameras = [];
@@ -45,28 +58,28 @@ import Layout from '../../layouts/Layout.astro';
       // @ts-ignore
       const cameraName = cameraSelect?.options[cameraSelect.selectedIndex].text;
       const existingCamera = getCameraConfigByCameraId(selectedCamera);
-      if (!existingCamera) {
-        const cameraConfig: ICameraConfig = {
-          deviceId: selectedCamera,
-          name: cameraName,
-          number: getAllCameraConfigs().length + 1,
-          liveThreshold: 0.45,
-          faceScoreThreshold: 0.45,
-          pitchThreshold: 0.5,
-          yawThreshold: 0.5,
-          sceneName: null,
-          faceDetectionFramesThreshold: 0,
-        };
-        addCameraConfigToStorage(cameraConfig);
-        addCameraDiv(cameraConfig);
-        initializeCamera(
-          selectedCamera,
-          document.getElementById(`video-camera-${selectedCamera}`),
-          document.getElementById(`canvas-camera-${selectedCamera}`),
-        );
-      } else {
-        alert('This camera has already been added');
-      }
+      // if (!existingCamera) {
+      const cameraConfig: ICameraConfig = {
+        deviceId: selectedCamera,
+        name: cameraName,
+        number: getAllCameraConfigs().length + 1,
+        liveThreshold: 0.45,
+        faceScoreThreshold: 0.45,
+        pitchThreshold: 0.5,
+        yawThreshold: 0.5,
+        sceneName: null,
+        faceDetectionFramesThreshold: 0,
+      };
+      addCameraConfigToStorage(cameraConfig);
+      addCameraDiv(cameraConfig);
+      initializeCamera(
+        selectedCamera,
+        document.getElementById(`video-camera-${selectedCamera}`),
+        document.getElementById(`canvas-camera-${selectedCamera}`),
+      );
+      // } else {
+      //   alert('This camera has already been added');
+      // }
     });
   }
 
@@ -333,9 +346,17 @@ import Layout from '../../layouts/Layout.astro';
     const canvas = createCanvasElement(cameraOptions.deviceId);
     cameraDiv.appendChild(canvas);
 
-    const div = document.body.appendChild(cameraDiv);
+    const camerasContainer = document.getElementById('camerasContainer');
+    // const div = document.body.appendChild(cameraDiv);
+    const cameraCardInstance: any = new CameraCard({
+      target: camerasContainer,
+      props: {
+        cameraName: 'Camera 1',
+        status: 'Looking',
+      },
+    });
 
-    return div;
+    return cameraCardInstance;
   }
 
   function removeCameraListener(event: any) {

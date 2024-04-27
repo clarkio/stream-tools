@@ -7,7 +7,7 @@ const CAM_ID_ATTRIBUTE_NAME = 'cameraid';
 
 const myConfig = {
   modelBasePath: 'https://cdn.jsdelivr.net/npm/@vladmandic/human/models/',
-  // backend: 'webgl',
+  backend: 'webgl',
   face: {
     enabled: true,
     detector: { enabled: true, rotation: true },
