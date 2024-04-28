@@ -3,7 +3,7 @@ import Human from 'https://cdn.jsdelivr.net/npm/@vladmandic/human/dist/human.esm
 
 import { connect, getIsConnected, setObsScene } from './obs';
 import { getCameraConfigByCameraId, type ICameraConfig } from './camera-config';
-const CAM_ID_ATTRIBUTE_NAME = 'cameraid';
+const CAM_ID_ATTRIBUTE_NAME = 'data-cameraid';
 
 const myConfig = {
   modelBasePath: 'https://cdn.jsdelivr.net/npm/@vladmandic/human/models/',
@@ -196,8 +196,8 @@ export async function startCamera(cameraId: string, videoElement: HTMLVideoEleme
     console.log('Camera has not been started with the human AI library yet');
     const webcamStatus = await camera.human.webcam.start({ element: videoElement, crop: false, id: cameraId, debug: true });
     console.log(`Camera ID: ${cameraId}\nStatus: ${webcamStatus}`);
-    canvasElement.width = 480;
-    canvasElement.height = 270;
+    // canvasElement.width = 480;
+    // canvasElement.height = 270;
     // canvasElement.width = camera.human.webcam.width;
     // canvasElement.height = camera.human.webcam.height;
     // canvasElement.onclick = async (event) => { // pause when clicked on screen and resume on next click
