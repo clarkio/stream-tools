@@ -18,7 +18,7 @@ import Layout from '../../layouts/Layout.astro';
     <select id='cameraSelect' class='rounded px-4 py-2 font-bold text-black'
     ></select><button
       id='addCameraButton'
-      class='rounded bg-blue-500 px-4 py-2 font-bold text-white hover:bg-blue-700'
+      class='rounded bg-sky-500 px-4 py-2 font-bold text-white hover:bg-sky-700'
       >Add Camera</button
     ><br /><br />
     <div
@@ -351,7 +351,7 @@ import Layout from '../../layouts/Layout.astro';
     const cameraCardInstance: any = new CameraCard({
       target: camerasContainer,
       props: {
-        cameraConfig: cameraOptions
+        cameraConfig: cameraOptions,
       },
     });
 

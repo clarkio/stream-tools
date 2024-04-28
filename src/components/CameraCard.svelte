@@ -52,15 +52,19 @@
 
 <div
   id="camera-container-{cameraConfig.deviceId}"
-  class="relative rounded bg-slate-400 px-6 pt-10 pb-8 shadow-xl ring-1 ring-gray-900/5 m-0"
+  class="relative rounded bg-sky-700 px-6 pt-10 pb-8 shadow-xl ring-1 ring-gray-900/5 m-0"
 >
   <div class="overflow-hidden mx-auto max-w-md">
     <div class="flex justify-between items-center text-center">
       <div id="cameraLabel-{cameraConfig.deviceId}" class="text-lg font-bold">
         {cameraConfig.name}
       </div>
-      <div class="text-lg font-bold">
-        <span>Status: </span><span id="isLookingLabel-{cameraConfig.deviceId}">
+      <div class="text-lg">
+        <!-- <span>Status: </span> -->
+        <span
+          id="isLookingLabel-{cameraConfig.deviceId}"
+          class=" bg-red-500 rounded-md px-2 py-0.5"
+          >Not Looking
         </span>
       </div>
     </div>
@@ -239,20 +243,20 @@
     <div class="pt-8 text-base font-semibold leading-7">
       <button
         id="togglePlayForCamera-{cameraConfig.deviceId}"
-        class="rounded bg-blue-500 px-4 py-2 font-bold text-white hover:bg-blue-700"
+        class="rounded bg-sky-500 px-4 py-2 font-bold text-white hover:bg-blue-700"
         data-isplaying="false"
         data-cameraid={cameraConfig.deviceId}
         on:click={togglePlayForCamera}>Play</button
       >
       <button
         id="toggleTrackingForCamera-{cameraConfig.deviceId}"
-        class="rounded bg-blue-500 px-4 py-2 font-bold text-white hover:bg-blue-700"
+        class="rounded bg-sky-500 px-4 py-2 font-bold text-white hover:bg-blue-700"
         data-istracking="false"
         data-cameraid={cameraConfig.deviceId}>Start Tracking</button
       >
       <button
         id="removeCamera-{cameraConfig.deviceId}"
-        class="absolute rounded bg-red-500 px-4 py-2 font-bold text-white hover:bg-red-700 right-10"
+        class="absolute rounded bg-red-800 px-4 py-2 font-bold text-white hover:bg-red-700 right-10"
         data-cameranumber={cameraConfig.number}
         data-cameraid={cameraConfig.deviceId}
         on:click={removeCameraListener}>Remove</button
