@@ -5,7 +5,11 @@
     updateCameraConfig,
     type ICameraConfig,
   } from '../scripts/camera-config';
-  import { startCamera, pauseCamera } from '../scripts/face-look-detection';
+  import {
+    startCamera,
+    pauseCamera,
+    startTracking,
+  } from '../scripts/face-look-detection';
 
   export let cameraConfig: ICameraConfig;
 
@@ -13,7 +17,7 @@
     const isPlaying =
       event.target.getAttribute('data-isplaying')?.toLowerCase() === 'true';
     const cameraId = event.target.getAttribute('data-cameraid');
-    const config = getCameraConfigByCameraId(cameraId) || {};
+    const config: ICameraConfig = getCameraConfigByCameraId(cameraId) || {};
     console.log('config', config);
     console.log(`Camera ID ${cameraId} isPlaying: ${isPlaying}`);
     const textOverlay = document.getElementById(
@@ -48,13 +52,33 @@
     cameraDiv?.remove();
     removeCameraConfig(cameraId);
   }
+
+  async function toggleTrackingForCamera(event: any) {
+    console.dir(event);
+    const isTracking =
+      event.target.getAttribute('data-istracking')?.toLowerCase() === 'true';
+    const cameraId = event.target.getAttribute('data-cameraid');
+    if (isTracking) {
+      event.target.setAttribute('data-istracking', false);
+      event.target.innerText = `Start Tracking`;
+      const canvas = document.getElementById(`canvas-camera-${cameraId}`);
+      canvas?.remove();
+      pauseCamera(cameraId);
+    } else {
+      event.target.setAttribute('isTracking', true);
+      event.target.innerText = `Stop Tracking`;
+      const video = document.getElementById(`video-camera-${cameraId}`);
+      const canvas = document.getElementById(`canvas-camera-${cameraId}`);
+      startTracking(video, canvas, cameraId);
+    }
+  }
 </script>
 
 <div
   id="camera-container-{cameraConfig.deviceId}"
-  class="relative rounded bg-sky-700 px-6 pt-10 pb-8 shadow-xl ring-1 ring-gray-900/5 m-0"
+  class="relative w-max rounded bg-sky-700 px-6 pt-10 pb-8 shadow-xl ring-1 ring-gray-900/5 m-0"
 >
-  <div class="overflow-hidden mx-auto max-w-md">
+  <div class="overflow-hidden mx-auto">
     <div class="flex justify-between items-center text-center">
       <div id="cameraLabel-{cameraConfig.deviceId}" class="text-lg font-bold">
         {cameraConfig.name}
@@ -70,17 +94,7 @@
     </div>
     <div class="divide-y divide-gray-300/50">
       <div class="space-y-6 py-8 text-base leading-7">
-        <div
-          class="flex flex-row flex-nowrap overflow-visible gap-4 max-w-md relative"
-        >
-          <!-- <iframe
-            class="max-w-full aspect-video"
-            src="https://www.youtube.com/embed/dQw4w9WgXcQ?si=uACYK4z6srkRrvph"
-            title="YouTube video player"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            referrerpolicy="strict-origin-when-cross-origin"
-            allowfullscreen
-          ></iframe> -->
+        <div class="flex flex-row flex-nowrap gap-4 max-w-lg relative">
           <video
             id="video-camera-{cameraConfig.deviceId}"
             data-cameraid={cameraConfig.deviceId}
@@ -106,23 +120,25 @@
             <div class="text-lg font-bold">Live Values:</div>
             <div>
               <span>Yaw:</span>
-              <span>0.5</span>
+              <span id="yaw-result-{cameraConfig.deviceId}">N/A</span>
             </div>
             <div>
               <span>Pitch:</span>
-              <span>0.5</span>
+              <span id="pitch-result-{cameraConfig.deviceId}">N/A</span>
             </div>
             <div>
               <span>Live:</span>
-              <span>0.5</span>
+              <span id="live-result-{cameraConfig.deviceId}">N/A</span>
             </div>
             <div>
               <span>Face Score:</span>
-              <span>0.5</span>
+              <span id="facescore-result-{cameraConfig.deviceId}">N/A</span>
             </div>
             <div>
-              <span>Frame Delay:</span>
-              <span>0.5</span>
+              <span>Looking Frame Count:</span>
+              <span id="face-detection-frame-count-{cameraConfig.deviceId}"
+                >N/A</span
+              >
             </div>
           </div>
         </div>
@@ -137,9 +153,11 @@
                 placeholder="Yaw Threshold (0.5)"
                 value={cameraConfig.yawThreshold || 0.5}
                 type="text"
+                data-cameraid={cameraConfig.deviceId}
                 on:change={(event) => {
                   // @ts-ignore
-                  const cameraId = event.target.getAttribute('cameraid') || '';
+                  const cameraId =
+                    event.target.getAttribute('data-cameraid') || '';
                   const cameraConfig = getCameraConfigByCameraId(cameraId);
                   // @ts-ignore
                   cameraConfig.yawThreshold = parseFloat(event.target?.value);
@@ -155,11 +173,13 @@
                 id="pitch-threshold-input-{cameraConfig.deviceId}"
                 class="text-black px-2"
                 placeholder="Pitch Threshold (0.5)"
-                value="0.5"
+                value={cameraConfig.pitchThreshold || 0.5}
                 type="text"
+                data-cameraid={cameraConfig.deviceId}
                 on:change={(event) => {
                   // @ts-ignore
-                  const cameraId = event.target.getAttribute('cameraid') || '';
+                  const cameraId =
+                    event.target.getAttribute('data-cameraid') || '';
                   const cameraConfig = getCameraConfigByCameraId(cameraId);
                   // @ts-ignore
                   cameraConfig.pitchThreshold = parseFloat(event.target?.value);
@@ -175,11 +195,13 @@
                 id="live-level-input-{cameraConfig.deviceId}"
                 class="text-black px-2"
                 placeholder="Live Threshold (0.5)"
-                value="0.5"
+                value={cameraConfig.liveThreshold || 0.5}
                 type="text"
+                data-cameraid={cameraConfig.deviceId}
                 on:change={(event) => {
                   // @ts-ignore
-                  const cameraId = event.target.getAttribute('cameraid') || '';
+                  const cameraId =
+                    event.target.getAttribute('data-cameraid') || '';
                   const cameraConfig = getCameraConfigByCameraId(cameraId);
                   // @ts-ignore
                   cameraConfig.liveThreshold = parseFloat(event.target?.value);
@@ -194,12 +216,14 @@
               <input
                 id="facescore-threshold-input-{cameraConfig.deviceId}"
                 class="text-black px-2"
-                placeholder="Face Score Threshold (0.5)"
-                value="0.5"
+                placeholder="Face Score Threshold (0.8)"
+                value={cameraConfig.faceScoreThreshold || 0.8}
                 type="text"
+                data-cameraid={cameraConfig.deviceId}
                 on:change={(event) => {
                   // @ts-ignore
-                  const cameraId = event.target.getAttribute('cameraid') || '';
+                  const cameraId =
+                    event.target.getAttribute('data-cameraid') || '';
                   const cameraConfig = getCameraConfigByCameraId(cameraId);
                   // @ts-ignore
                   cameraConfig.faceScoreThreshold = parseFloat(
@@ -217,11 +241,16 @@
                 id="face-frames-delay-threshold-input-{cameraConfig.deviceId}"
                 class="text-black px-2"
                 placeholder="Frame Delay (0)"
-                value="0"
+                value={cameraConfig.faceDetectionFramesThreshold || 0}
                 type="text"
+                data-cameraid={cameraConfig.deviceId}
                 on:change={(event) => {
+                  console.log('Frame delay changed');
+                  console.dir(event);
                   // @ts-ignore
-                  const cameraId = event.target.getAttribute('cameraid') || '';
+                  const cameraId =
+                    event.target.getAttribute('data-cameraid') || '';
+                  console.log('Camera ID', cameraId);
                   const cameraConfig = getCameraConfigByCameraId(cameraId);
                   // @ts-ignore
                   cameraConfig.faceDetectionFramesThreshold = parseFloat(
@@ -252,7 +281,8 @@
         id="toggleTrackingForCamera-{cameraConfig.deviceId}"
         class="rounded bg-sky-500 px-4 py-2 font-bold text-white hover:bg-blue-700"
         data-istracking="false"
-        data-cameraid={cameraConfig.deviceId}>Start Tracking</button
+        data-cameraid={cameraConfig.deviceId}
+        on:click={toggleTrackingForCamera}>Start Tracking</button
       >
       <button
         id="removeCamera-{cameraConfig.deviceId}"

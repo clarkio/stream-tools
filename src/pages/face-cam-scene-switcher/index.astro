@@ -58,28 +58,28 @@ import Layout from '../../layouts/Layout.astro';
       // @ts-ignore
       const cameraName = cameraSelect?.options[cameraSelect.selectedIndex].text;
       const existingCamera = getCameraConfigByCameraId(selectedCamera);
-      // if (!existingCamera) {
-      const cameraConfig: ICameraConfig = {
-        deviceId: selectedCamera,
-        name: cameraName,
-        number: getAllCameraConfigs().length + 1,
-        liveThreshold: 0.45,
-        faceScoreThreshold: 0.45,
-        pitchThreshold: 0.5,
-        yawThreshold: 0.5,
-        sceneName: null,
-        faceDetectionFramesThreshold: 0,
-      };
-      addCameraConfigToStorage(cameraConfig);
-      addCameraDiv(cameraConfig);
-      initializeCamera(
-        selectedCamera,
-        document.getElementById(`video-camera-${selectedCamera}`),
-        document.getElementById(`canvas-camera-${selectedCamera}`),
-      );
-      // } else {
-      //   alert('This camera has already been added');
-      // }
+      if (!existingCamera) {
+        const cameraConfig: ICameraConfig = {
+          deviceId: selectedCamera,
+          name: cameraName,
+          number: getAllCameraConfigs().length + 1,
+          liveThreshold: 0.45,
+          faceScoreThreshold: 0.45,
+          pitchThreshold: 0.5,
+          yawThreshold: 0.5,
+          sceneName: null,
+          faceDetectionFramesThreshold: 0,
+        };
+        addCameraConfigToStorage(cameraConfig);
+        addCameraDiv(cameraConfig);
+        initializeCamera(
+          selectedCamera,
+          document.getElementById(`video-camera-${selectedCamera}`),
+          document.getElementById(`canvas-camera-${selectedCamera}`),
+        );
+      } else {
+        alert('This camera has already been added');
+      }
     });
   }
 

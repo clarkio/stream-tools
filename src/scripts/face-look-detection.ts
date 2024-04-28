@@ -61,6 +61,7 @@ async function detectionLoop(videoElement: HTMLVideoElement) { // main detection
     if (camera.timestamp.start === 0) camera.timestamp.start = camera.human.now();
 
     const result = await camera.human.detect(videoElement);
+    console.log(result);
     await printDetectionResults(result, camera);
     const isFaceLooking = await determineIfFaceIsLooking(result, cameraId);
     if (isFaceLooking) {
@@ -69,13 +70,16 @@ async function detectionLoop(videoElement: HTMLVideoElement) { // main detection
         if (!camera.isFaceLooking) {
           camera.isFaceLooking = true;
           console.log(`Camera ID ${cameraId} IS being looked at!`);
-          const message = `Face Is Looking: ${camera.isFaceLooking}`;
+          const message = camera.isFaceLooking ? `Looking` : `Not Looking`;
           const label = document.getElementById(`isLookingLabel-${cameraId}`);
           if (!label) {
             console.warn(`No "looking" label found for camera #${cameraId}`);
             return;
           };
           label.innerText = message;
+          label.classList.remove('bg-red-500');
+          label.classList.add('bg-green-500');
+
           setObsScene(cameraId);
         }
       }
@@ -84,13 +88,15 @@ async function detectionLoop(videoElement: HTMLVideoElement) { // main detection
         camera.faceDetectionFrameCount = 0;
         camera.isFaceLooking = false;
         console.log(`Camera ID ${cameraId} IS NOT being looked at!`);
-        const message = `Face Is Looking: ${camera.isFaceLooking}`;
+        const message = camera.isFaceLooking ? `Looking` : `Not Looking`;
         const label = document.getElementById(`isLookingLabel-${cameraId}`);
         if (!label) {
           console.warn(`No "looking" label found for camera ID ${cameraId}`);
           return;
         };
         label.innerText = message;
+        label.classList.add('bg-red-500');
+        label.classList.remove('bg-green-500');
       }
     }
 
@@ -143,11 +149,11 @@ async function printDetectionResults(result: any, camera: Camera) {
   const { pitch, roll, yaw } = face.rotation.angle;
   // @ts-ignore
   const { bearing, strength } = face.rotation.gaze;
-  document.getElementById(`pitch-result-${camera.cameraId}`)!.innerText = `Pitch Result: ${pitch}`;
-  document.getElementById(`yaw-result-${camera.cameraId}`)!.innerText = ` Yaw Result: ${yaw}`;
-  document.getElementById(`live-result-${camera.cameraId}`)!.innerText = `Live Result: ${face.live}`;
-  document.getElementById(`facescore-result-${camera.cameraId}`)!.innerText = `Face Score Result: ${face.faceScore}`;
-  document.getElementById(`face-detection-frame-count-${camera.cameraId}`)!.innerText = `Face Detection Frame Count: ${camera.faceDetectionFrameCount}`;
+  document.getElementById(`pitch-result-${camera.cameraId}`)!.innerText = `${pitch.toFixed(5)}`;
+  document.getElementById(`yaw-result-${camera.cameraId}`)!.innerText = `${yaw.toFixed(5)}`;
+  document.getElementById(`live-result-${camera.cameraId}`)!.innerText = `${face.live}`;
+  document.getElementById(`facescore-result-${camera.cameraId}`)!.innerText = `${face.faceScore}`;
+  document.getElementById(`face-detection-frame-count-${camera.cameraId}`)!.innerText = `${camera.faceDetectionFrameCount}`;
 }
 
 // @ts-ignore
@@ -233,8 +239,8 @@ export async function stopCamera(cameraId: string) {
 
 // @ts-ignore
 export async function startTracking(videoElement, canvasElement, cameraId) {
-  await connect();
-  if (!getIsConnected()) throw new Error('Not connected to OBS');
+  // await connect();
+  // if (!getIsConnected()) throw new Error('Not connected to OBS');
   const camera = cameras.find(camera => camera.cameraId === cameraId);
   if (!camera) throw new Error(`No camera found with ID ${cameraId}`);
 
