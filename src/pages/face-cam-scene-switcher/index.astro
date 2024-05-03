@@ -3,17 +3,29 @@ import Layout from '../../layouts/Layout.astro';
 ---
 
 <Layout title='Face Cam Scene Switcher'>
-  <main>
-    <a href='../'>Back to All Stream Tools</a>
-    <h1>OBS Camera Face Detection</h1>
-    <a href='config'>Config</a>
+  <main class='text-white'>
+    <a class='text-white underline visited:text-purple-600' href='../'
+      >Back to All Stream Tools</a
+    >
+    <h1 class='text-2xl font-bold'>OBS Camera Face Detection</h1>
+    <a class='text-white underline visited:text-purple-600' href='config'
+      >Config</a
+    >
     <p>
       Set up your camera's to track when your face looks at each one and switch
       to the respective scene in OBS
     </p>
-    <select id='cameraSelect'></select><button id='addCameraButton'
+    <select id='cameraSelect' class='rounded px-4 py-2 font-bold text-black'
+    ></select><button
+      id='addCameraButton'
+      class='rounded bg-sky-500 px-4 py-2 font-bold text-white hover:bg-sky-700'
       >Add Camera</button
     ><br /><br />
+    <div
+      id='camerasContainer'
+      class='relative flex flex-row flex-wrap overflow-hidden gap-1 py-6 px-6'
+    >
+    </div>
   </main>
 </Layout>
 
@@ -32,6 +44,7 @@ import Layout from '../../layouts/Layout.astro';
     updateCameraConfig,
     type ICameraConfig,
   } from '../../scripts/camera-config';
+  import CameraCard from '../../components/CameraCard.svelte';
 
   const CAM_ID_ATTRIBUTE_NAME = 'cameraid';
   let cameras = [];
@@ -333,9 +346,16 @@ import Layout from '../../layouts/Layout.astro';
     const canvas = createCanvasElement(cameraOptions.deviceId);
     cameraDiv.appendChild(canvas);
 
-    const div = document.body.appendChild(cameraDiv);
+    const camerasContainer = document.getElementById('camerasContainer');
+    // const div = document.body.appendChild(cameraDiv);
+    const cameraCardInstance: any = new CameraCard({
+      target: camerasContainer,
+      props: {
+        cameraConfig: cameraOptions,
+      },
+    });
 
-    return div;
+    return cameraCardInstance;
   }
 
   function removeCameraListener(event: any) {

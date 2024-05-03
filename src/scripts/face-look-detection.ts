@@ -3,11 +3,11 @@ import Human from 'https://cdn.jsdelivr.net/npm/@vladmandic/human/dist/human.esm
 
 import { connect, getIsConnected, setObsScene } from './obs';
 import { getCameraConfigByCameraId, type ICameraConfig } from './camera-config';
-const CAM_ID_ATTRIBUTE_NAME = 'cameraid';
+const CAM_ID_ATTRIBUTE_NAME = 'data-cameraid';
 
 const myConfig = {
   modelBasePath: 'https://cdn.jsdelivr.net/npm/@vladmandic/human/models/',
-  // backend: 'webgl',
+  backend: 'webgl',
   face: {
     enabled: true,
     detector: { enabled: true, rotation: true },
@@ -69,13 +69,16 @@ async function detectionLoop(videoElement: HTMLVideoElement) { // main detection
         if (!camera.isFaceLooking) {
           camera.isFaceLooking = true;
           console.log(`Camera ID ${cameraId} IS being looked at!`);
-          const message = `Face Is Looking: ${camera.isFaceLooking}`;
+          const message = camera.isFaceLooking ? `Looking` : `Not Looking`;
           const label = document.getElementById(`isLookingLabel-${cameraId}`);
           if (!label) {
             console.warn(`No "looking" label found for camera #${cameraId}`);
             return;
           };
           label.innerText = message;
+          label.classList.remove('bg-red-500');
+          label.classList.add('bg-green-500');
+
           setObsScene(cameraId);
         }
       }
@@ -84,13 +87,15 @@ async function detectionLoop(videoElement: HTMLVideoElement) { // main detection
         camera.faceDetectionFrameCount = 0;
         camera.isFaceLooking = false;
         console.log(`Camera ID ${cameraId} IS NOT being looked at!`);
-        const message = `Face Is Looking: ${camera.isFaceLooking}`;
+        const message = camera.isFaceLooking ? `Looking` : `Not Looking`;
         const label = document.getElementById(`isLookingLabel-${cameraId}`);
         if (!label) {
           console.warn(`No "looking" label found for camera ID ${cameraId}`);
           return;
         };
         label.innerText = message;
+        label.classList.add('bg-red-500');
+        label.classList.remove('bg-green-500');
       }
     }
 
@@ -143,11 +148,11 @@ async function printDetectionResults(result: any, camera: Camera) {
   const { pitch, roll, yaw } = face.rotation.angle;
   // @ts-ignore
   const { bearing, strength } = face.rotation.gaze;
-  document.getElementById(`pitch-result-${camera.cameraId}`)!.innerText = `Pitch Result: ${pitch}`;
-  document.getElementById(`yaw-result-${camera.cameraId}`)!.innerText = ` Yaw Result: ${yaw}`;
-  document.getElementById(`live-result-${camera.cameraId}`)!.innerText = `Live Result: ${face.live}`;
-  document.getElementById(`facescore-result-${camera.cameraId}`)!.innerText = `Face Score Result: ${face.faceScore}`;
-  document.getElementById(`face-detection-frame-count-${camera.cameraId}`)!.innerText = `Face Detection Frame Count: ${camera.faceDetectionFrameCount}`;
+  document.getElementById(`pitch-result-${camera.cameraId}`)!.innerText = `${pitch.toFixed(5)}`;
+  document.getElementById(`yaw-result-${camera.cameraId}`)!.innerText = `${yaw.toFixed(5)}`;
+  document.getElementById(`live-result-${camera.cameraId}`)!.innerText = `${face.live}`;
+  document.getElementById(`facescore-result-${camera.cameraId}`)!.innerText = `${face.faceScore}`;
+  document.getElementById(`face-detection-frame-count-${camera.cameraId}`)!.innerText = `${camera.faceDetectionFrameCount}`;
 }
 
 // @ts-ignore
@@ -196,8 +201,8 @@ export async function startCamera(cameraId: string, videoElement: HTMLVideoEleme
     console.log('Camera has not been started with the human AI library yet');
     const webcamStatus = await camera.human.webcam.start({ element: videoElement, crop: false, id: cameraId, debug: true });
     console.log(`Camera ID: ${cameraId}\nStatus: ${webcamStatus}`);
-    canvasElement.width = 480;
-    canvasElement.height = 270;
+    // canvasElement.width = 480;
+    // canvasElement.height = 270;
     // canvasElement.width = camera.human.webcam.width;
     // canvasElement.height = camera.human.webcam.height;
     // canvasElement.onclick = async (event) => { // pause when clicked on screen and resume on next click
