@@ -61,7 +61,6 @@ async function detectionLoop(videoElement: HTMLVideoElement) { // main detection
     if (camera.timestamp.start === 0) camera.timestamp.start = camera.human.now();
 
     const result = await camera.human.detect(videoElement);
-    console.log(result);
     await printDetectionResults(result, camera);
     const isFaceLooking = await determineIfFaceIsLooking(result, cameraId);
     if (isFaceLooking) {
@@ -239,8 +238,8 @@ export async function stopCamera(cameraId: string) {
 
 // @ts-ignore
 export async function startTracking(videoElement, canvasElement, cameraId) {
-  // await connect();
-  // if (!getIsConnected()) throw new Error('Not connected to OBS');
+  await connect();
+  if (!getIsConnected()) throw new Error('Not connected to OBS');
   const camera = cameras.find(camera => camera.cameraId === cameraId);
   if (!camera) throw new Error(`No camera found with ID ${cameraId}`);
 
