@@ -3,32 +3,55 @@ import Layout from '../../layouts/Layout.astro';
 ---
 
 <Layout title='Config - Face Cam Scene Switcher'>
-  <a href='../../'>Back to All Stream Tools</a>
-  <h1>OBS Camera Face Detection - Configuration</h1>
-  <a href='../'>Back</a>
-  <h2>OBS Websocket Configuration:</h2>
-  <form id='obsConfigForm'>
-    <label for='address'>OBS Websocket Address:</label>
-    <input
-      type='text'
-      id='address'
-      name='address'
-      value='localhost'
-      required
-    /><br /><br />
-
-    <label for='port'>OBS Websocket Port:</label>
-    <input type='text' id='port' name='port' value='4455' required /><br /><br
-    />
-
-    <label for='password'>OBS Websocket Password:</label>
-    <input type='password' id='password' name='password' required /><br /><br />
-  </form>
-  <button id='saveObsConfigFormButton'>Save</button>
-  <h2>Camera Configurations:</h2>
-  <button id='updateSceneOptionsButton'>Update Scene Options</button>
-  <br /><br />
-  <div id='cameraConfigs'></div>
+  <div class='text-white'>
+    <a class='text-white underline visited:text-purple-600' href='../../'
+      >Back to All Stream Tools</a
+    >
+    <h1 class='text-2xl font-bold'>
+      OBS Camera Face Detection - Configuration
+    </h1>
+    <a class='text-white underline visited:text-purple-600' href='../'>Back</a>
+    <h2 class='text-xl font-bold'>OBS Websocket Configuration:</h2>
+    <form id='obsConfigForm'>
+      <label for='address'>OBS Websocket Address:</label>
+      <input
+        type='text'
+        id='address'
+        class='text-black px-2'
+        name='address'
+        value='localhost'
+        required
+      /><br /><br />
+      <label for='port'>OBS Websocket Port:</label>
+      <input
+        class='text-black px-2'
+        type='text'
+        id='port'
+        name='port'
+        value='4455'
+        required
+      /><br /><br />
+      <label for='password'>OBS Websocket Password:</label>
+      <input
+        class='text-black px-2'
+        type='password'
+        id='password'
+        name='password'
+        required
+      /><br /><br />
+    </form>
+    <button
+      class='rounded bg-sky-500 px-4 py-2 font-bold text-white hover:bg-sky-700'
+      id='saveObsConfigFormButton'>Save</button
+    >
+    <h2 class='text-xl font-bold'>Camera Configurations:</h2>
+    <button
+      class='rounded bg-sky-500 px-4 py-2 font-bold text-white hover:bg-sky-700'
+      id='updateSceneOptionsButton'>Update Scene Options</button
+    >
+    <br /><br />
+    <div id='cameraConfigs'></div>
+  </div>
 </Layout>
 <script>
   import { connect, getAllScenes, getIsConnected } from '../../scripts/obs';
@@ -113,7 +136,7 @@ import Layout from '../../layouts/Layout.astro';
       <label>For Camera:</label>
       <label name="name">${cameraConfig.name}</label> -->
       <label>Use Scene:</label>
-      <select id="selectFor-${cameraConfigs.deviceId}" name="sceneName">
+      <select id="selectFor-${cameraConfigs.deviceId}" class="rounded px-4 py-2 font-bold text-black" name="sceneName">
         ${generateSceneOptions(allScenes, cameraConfig.sceneName || '')}
       </select>
   `;
